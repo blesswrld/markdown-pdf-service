@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8" />
+        <title>MD to PDF Editor</title>
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-slate-900 text-slate-200 h-screen flex flex-col">
+        <header
+            class="p-4 bg-slate-800 flex justify-between items-center shadow-xl"
+        >
+            <h1 class="text-xl font-bold text-emerald-400">
+                ⚡ Interactive MD-PDF
+            </h1>
+            <button
+                id="downloadBtn"
+                class="bg-emerald-500 hover:bg-emerald-600 text-slate-900 px-6 py-2 rounded-lg font-bold transition"
+            >
+                Скачать PDF
+            </button>
+        </header>
+
+        <main class="flex-grow flex overflow-hidden">
+            <textarea
+                id="editor"
+                class="w-1/2 p-6 bg-slate-900 border-r border-slate-700 outline-none font-mono resize-none"
+                placeholder="Пишите Markdown здесь..."
+            ></textarea>
+            <div
+                id="preview"
+                class="w-1/2 p-6 overflow-y-auto bg-white text-slate-900 prose lg:prose-xl"
+            ></div>
+        </main>
+
+        <script>
+            const editor = document.getElementById("editor");
+            const preview = document.getElementById("preview");
+            const downloadBtn = document.getElementById("downloadBtn");
+
+            editor.addEventListener("input", () => {
+                preview.innerHTML = marked.parse(editor.value);
+            });
+
+            downloadBtn.addEventListener("click", async () => {
+                downloadBtn.innerText = "Генерация...";
+                const res = await fetch("/generate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ md: editor.value }),
+                });
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "document.pdf";
+                a.click();
+                downloadBtn.innerText = "Скачать PDF";
+            });
+        </script>
+    </body>
+</html>
