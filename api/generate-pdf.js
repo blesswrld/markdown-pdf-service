@@ -1,9 +1,5 @@
-import chromium from "@sparticuz/chromium-min";
 import puppeteer from "puppeteer-core";
 import { marked } from "marked";
-
-const PACK_URL =
-    "https://github.com/Sparticuz/chromium/releases/download/v121.0.0/chromium-v121.0.0-pack.tar";
 
 export default async function handler(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -27,14 +23,11 @@ export default async function handler(req, res) {
     let browser = null;
 
     try {
-        console.log("Запуск Chromium из оперативной памяти...");
+        console.log("Подключение к облачному Chromium (Browserless)...");
 
-        browser = await puppeteer.launch({
-            args: chromium.args,
-            defaultViewport: chromium.defaultViewport,
-            executablePath: await chromium.executablePath(PACK_URL),
-            headless: chromium.headless,
-            ignoreHTTPSErrors: true,
+        const TOKEN = process.env.BLESS_TOKEN;
+        browser = await puppeteer.connect({
+            browserWSEndpoint: `wss://chrome.browserless.io?token=${TOKEN}`,
         });
 
         const page = await browser.newPage();
@@ -94,7 +87,7 @@ export default async function handler(req, res) {
         res.setHeader("Content-Type", "application/pdf");
         res.status(200).send(pdf);
     } catch (error) {
-        console.error("Критическая ошибка:", error);
+        console.error("Ошибка:", error);
         res.status(500).json({
             error: error.message || "Ошибка генерации PDF",
         });
